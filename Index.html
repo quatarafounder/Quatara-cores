@@ -1,1063 +1,767 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Command Terminal</title>
-    <style>
-        :root {
-            --background: black;
-            --text-color: #00ff00;
-            --command-color: #9370db;
-            --cursor-color: #00ff00;
-            --prompt-color: #00ff00;
-            --suggestion-color: #555;
-        }
-
-        .theme-dark {
-            --background: black;
-            --text-color: #00ff00;
-            --command-color: #9370db;
-            --cursor-color: #00ff00;
-            --prompt-color: #00ff00;
-            --suggestion-color: #555;
-        }
-
-        .theme-light {
-            --background: white;
-            --text-color: #333;
-            --command-color: #6a0dad;
-            --cursor-color: #333;
-            --prompt-color: #333;
-            --suggestion-color: #999;
-        }
-
-        .theme-blue {
-            --background: #001f3f;
-            --text-color: #7FDBFF;
-            --command-color: #FFDC00;
-            --cursor-color: #7FDBFF;
-            --prompt-color: #7FDBFF;
-            --suggestion-color: #0074D9;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: var(--background);
-            color: var(--text-color);
-            font-family: 'Courier New', monospace;
-            padding: 20px;
-            overflow-x: hidden;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            min-height: 100vh;
-        }
-
-        #terminal {
-            max-width: 800px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        #output {
-            margin-bottom: 15px;
-            white-space: pre-wrap;
-            line-height: 1.5;
-            min-height: 200px;
-        }
-
-        .input-line {
-            display: flex;
-            align-items: center;
-            position: relative;
-            margin-top: 15px;
-            gap: 8px;
-        }
-
-        #prompt {
-            color: var(--prompt-color);
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        #commandInput {
-            background-color: transparent;
-            border: none;
-            color: var(--text-color);
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
-            flex-grow: 1;
-            outline: none;
-            caret-color: var(--cursor-color);
-            padding: 5px 0;
-            min-width: 0;
-        }
-
-        #suggestions {
-            position: absolute;
-            left: 0;
-            top: 100%;
-            background: var(--background);
-            border: 1px solid var(--text-color);
-            color: var(--suggestion-color);
-            padding: 8px;
-            font-size: 14px;
-            display: none;
-            z-index: 1000;
-            max-width: 300px;
-            width: 100%;
-            border-radius: 4px;
-        }
-
-        .cursor {
-            display: inline-block;
-            width: 8px;
-            height: 16px;
-            background-color: var(--cursor-color);
-            animation: blink 1.2s infinite;
-            margin-left: 2px;
-            flex-shrink: 0;
-        }
-
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
-        }
-
-        .command {
-            color: var(--command-color);
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .response {
-            color: var(--text-color);
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-
-        .theme-selector {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            background: var(--background);
-            border: 1px solid var(--text-color);
-            padding: 10px;
-            color: var(--text-color);
-            z-index: 1000;
-            border-radius: 5px;
-        }
-
-        .theme-selector select {
-            background: var(--background);
-            color: var(--text-color);
-            border: 1px solid var(--text-color);
-            padding: 5px;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .loading {
-            color: var(--suggestion-color);
-            font-style: italic;
-            margin: 5px 0;
-        }
-
-        .error {
-            color: #ff4444;
-            margin: 5px 0;
-        }
-
-        .success {
-            color: #44ff44;
-            margin: 5px 0;
-        }
-
-        .help-text {
-            margin: 10px 0;
-            padding: 10px;
-            border-left: 3px solid var(--command-color);
-            background-color: rgba(0,0,0,0.1);
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
-            
-            .theme-selector {
-                top: 10px;
-                right: 10px;
-                padding: 8px;
-            }
-            
-            #commandInput {
-                font-size: 16px; /* Keep readable on mobile */
-            }
-            
-            #output {
-                font-size: 14px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            
-            .theme-selector {
-                position: relative;
-                top: 0;
-                right: 0;
-                margin-bottom: 15px;
-                text-align: center;
-            }
-        }
-    </style>
-</head>
-<body class="theme-dark">
-    <div class="theme-selector">
-        <label for="themeSelect">Theme: </label>
-        <select id="themeSelect">
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-            <option value="blue">Blue</option>
-        </select>
-    </div>
-
-    <div id="terminal">
-        <div id="output">
-            <div class="response">COMMAND TERMINAL v2.0</div>
-            <div class="response">System initialized with basic capabilities...</div>
-            <div class="response">Type a command and press Enter to execute</div>
-            <div class="response">Press Tab for suggestions • ↑/↓ for history</div>
-            <div class="response">Type 'help' for available commands</div>
-        </div>
-        
-        <div class="input-line">
-            <span id="prompt">$</span>
-            <input type="text" id="commandInput" autofocus placeholder="Type command here..." aria-label="Command input">
-            <span class="cursor" aria-hidden="true"></span>
-            <div id="suggestions" aria-live="polite"></div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const inputField = document.getElementById('commandInput');
-            const outputDiv = document.getElementById('output');
-            const suggestionsDiv = document.getElementById('suggestions');
-            const themeSelect = document.getElementById('themeSelect');
-            
-            // Initialize command history
-            let commandHistory = [];
-            let historyIndex = -1;
-            let currentInput = '';
-
-            // Available commands
-            const availableCommands = ['help', 'clear', 'theme', 'time', 'date', 'ai'];
-            
-            // Safe math operations
-            const mathOperations = {
-                '+': (a, b) => a + b,
-                '-': (a, b) => a - b,
-                '*': (a, b) => a * b,
-                '/': (a, b) => b !== 0 ? a / b : 'Error: Division by zero',
-                '^': (a, b) => Math.pow(a, b)
-            };
-
-            // Load saved data safely
-            function loadSavedData() {
-                try {
-                    const storedHistory = localStorage.getItem('terminalHistory');
-                    if (storedHistory) {
-                        commandHistory = JSON.parse(storedHistory);
-                    }
-                    
-                    const savedTheme = localStorage.getItem('terminalTheme') || 'dark';
-                    document.body.className = 'theme-' + savedTheme;
-                    themeSelect.value = savedTheme;
-                } catch (error) {
-                    console.log('Error loading saved data:', error);
-                    // Initialize with defaults
-                    commandHistory = [];
-                    document.body.className = 'theme-dark';
-                }
-            }
-
-            // Save data safely
-            function saveData() {
-                try {
-                    localStorage.setItem('terminalHistory', JSON.stringify(commandHistory));
-                    localStorage.setItem('terminalTheme', themeSelect.value);
-                } catch (error) {
-                    console.log('Error saving data:', error);
-                }
-            }
-
-            // Initialize
-            loadSavedData();
-            inputField.focus();
-
-            // Event listeners
-            inputField.addEventListener('keydown', handleKeyDown);
-            themeSelect.addEventListener('change', handleThemeChange);
-            document.addEventListener('click', focusInput);
-
-            function handleKeyDown(event) {
-                suggestionsDiv.style.display = 'none';
-                
-                switch(event.key) {
-                    case 'Enter':
-                        event.preventDefault();
-                        executeCommand();
-                        break;
-                    case 'ArrowUp':
-                        event.preventDefault();
-                        navigateHistory('up');
-                        break;
-                    case 'ArrowDown':
-                        event.preventDefault();
-                        navigateHistory('down');
-                        break;
-                    case 'Tab':
-                        event.preventDefault();
-                        showSuggestions();
-                        break;
-                }
-            }
-
-            function handleThemeChange() {
-                const theme = themeSelect.value;
-                document.body.className = 'theme-' + theme;
-                saveData();
-            }
-
-            function focusInput() {
-                inputField.focus();
-            }
-
-            async function executeCommand() {
-                const command = inputField.value.trim();
-                if (!command) return;
-
-                // Add to history
-                commandHistory.push(command);
-                historyIndex = commandHistory.length;
-                saveData();
-                
-                // Display command
-                displayCommand(command);
-                
-                // Clear input
-                inputField.value = '';
-                currentInput = '';
-                
-                // Process command
-                await processCommand(command);
-                
-                // Scroll to bottom
-                scrollToBottom();
-            }
-
-            function displayCommand(command) {
-                const commandElement = document.createElement('div');
-                commandElement.className = 'command';
-                commandElement.textContent = '$ ' + command;
-                outputDiv.appendChild(commandElement);
-            }
-
-            async function processCommand(command) {
-                const loadingElement = createLoadingElement();
-                outputDiv.appendChild(loadingElement);
-
-                try {
-                    let responseText = '';
-
-                    if (command === 'clear') {
-                        clearTerminal();
-                        loadingElement.remove();
-                        return;
-                    } else if (command === 'help') {
-                        responseText = getHelpText();
-                    } else if (command.startsWith('theme ')) {
-                        responseText = handleThemeCommand(command);
-                    } else if (command === 'time') {
-                        responseText = 'Current time: ' + new Date().toLocaleTimeString();
-                    } else if (command === 'date') {
-                        responseText = 'Today is: ' + new Date().toLocaleDateString();
-                    } else if (command.startsWith('ai ')) {
-                        responseText = await handleAICommand(command);
-                    } else {
-                        responseText = 'Command not recognized. Type "help" for available commands.';
-                    }
-
-                    loadingElement.remove();
-                    displayResponse(responseText);
-
-                } catch (error) {
-                    loadingElement.remove();
-                    displayError('Error: ' + error.message);
-                }
-            }
-
-            function createLoadingElement() {
-                const element = document.createElement('div');
-                element.className = 'loading';
-                element.textContent = 'Processing...';
-                return element;
-            }
-
-            function displayResponse(text) {
-                const element = document.createElement('div');
-                element.className = 'response';
-                element.textContent = text;
-                outputDiv.appendChild(element);
-            }
-
-            function displayError(text) {
-                const element = document.createElement('div');
-                element.className = 'error';
-                element.textContent = text;
-                outputDiv.appendChild(element);
-            }
-
-            function clearTerminal() {
-                outputDiv.innerHTML = '';
-                
-                // Add initial messages
-                const messages = [
-                    'COMMAND TERMINAL v2.0',
-                    'System initialized with basic capabilities...',
-                    'Type a command and press Enter to execute',
-                    'Press Tab for suggestions • ↑/↓ for history',
-                    'Type \'help\' for available commands'
-                ];
-                
-                messages.forEach(msg => {
-                    const element = document.createElement('div');
-                    element.className = 'response';
-                    element.textContent = msg;
-                    outputDiv.appendChild(element);
-                });
-            }
-
-            function getHelpText() {
-                return `Available commands:
-• help - Show this help message
-• clear - Clear the terminal screen
-• theme [dark/light/blue] - Change color theme
-• time - Show current time
-• date - Show current date
-• ai [question] - Ask a question (simulated AI)`;
-            }
-
-            function handleThemeCommand(command) {
-                const theme = command.split(' ')[1];
-                if (['dark', 'light', 'blue'].includes(theme)) {
-                    themeSelect.value = theme;
-                    document.body.className = 'theme-' + theme;
-                    saveData();
-                    return 'Theme changed to ' + theme;
-                } else {
-                    return 'Error: Available themes are dark, light, blue';
-                }
-            }
-
-            async function handleAICommand(command) {
-                const question = command.substring(3).trim();
-                if (!question) {
-                    return 'Please ask a question after \'ai\'';
-                }
-
-                // Simulate AI processing
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                const responses = [
-                    `I understand you're asking about: "${question}". This is a simulated response.`,
-                    `Interesting question about "${question}". In a real implementation, this would connect to an AI API.`,
-                    `Regarding "${question}": This terminal is demonstrating basic functionality. AI integration would be added later.`,
-                    `I received your question about "${question}". This is a placeholder for actual AI processing.`
-                ];
-                
-                return responses[Math.floor(Math.random() * responses.length)];
-            }
-
-            function navigateHistory(direction) {
-                if (commandHistory.length === 0) return;
-                
-                if (direction === 'up') {
-                    if (historyIndex > 0) {
-                        if (historyIndex === commandHistory.length) {
-                            currentInput = inputField.value;
-                        }
-                        historyIndex--;
-                        inputField.value = commandHistory[historyIndex];
-                    }
-                } else {
-                    if (historyIndex < commandHistory.length - 1) {
-                        historyIndex++;
-                        inputField.value = commandHistory[historyIndex];
-                    } else if (historyIndex === commandHistory.length - 1) {
-                        historyIndex = commandHistory.length;
-                        inputField.value = currentInput;
-                    }
-                }
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Command Terminal</title>
-    <style>
-        :root {
-            --background: black;
-            --text-color: #00ff00;
-            --command-color: #9370db;
-            --cursor-color: #00ff00;
-            --prompt-color: #00ff00;
-            --suggestion-color: #555;
-        }
-
-        .theme-dark {
-            --background: black;
-            --text-color: #00ff00;
-            --command-color: #9370db;
-            --cursor-color: #00ff00;
-            --prompt-color: #00ff00;
-            --suggestion-color: #555;
-        }
-
-        .theme-light {
-            --background: white;
-            --text-color: #333;
-            --command-color: #6a0dad;
-            --cursor-color: #333;
-            --prompt-color: #333;
-            --suggestion-color: #999;
-        }
-
-        .theme-blue {
-            --background: #001f3f;
-            --text-color: #7FDBFF;
-            --command-color: #FFDC00;
-            --cursor-color: #7FDBFF;
-            --prompt-color: #7FDBFF;
-            --suggestion-color: #0074D9;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: var(--background);
-            color: var(--text-color);
-            font-family: 'Courier New', monospace;
-            padding: 20px;
-            overflow-x: hidden;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            min-height: 100vh;
-        }
-
-        #terminal {
-            max-width: 800px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        #output {
-            margin-bottom: 15px;
-            white-space: pre-wrap;
-            line-height: 1.5;
-            min-height: 200px;
-        }
-
-        .input-line {
-            display: flex;
-            align-items: center;
-            position: relative;
-            margin-top: 15px;
-            gap: 8px;
-        }
-
-        #prompt {
-            color: var(--prompt-color);
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        #commandInput {
-            background-color: transparent;
-            border: none;
-            color: var(--text-color);
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
-            flex-grow: 1;
-            outline: none;
-            caret-color: var(--cursor-color);
-            padding: 5px 0;
-            min-width: 0;
-        }
-
-        #suggestions {
-            position: absolute;
-            left: 0;
-            top: 100%;
-            background: var(--background);
-            border: 1px solid var(--text-color);
-            color: var(--suggestion-color);
-            padding: 8px;
-            font-size: 14px;
-            display: none;
-            z-index: 1000;
-            max-width: 300px;
-            width: 100%;
-            border-radius: 4px;
-        }
-
-        .cursor {
-            display: inline-block;
-            width: 8px;
-            height: 16px;
-            background-color: var(--cursor-color);
-            animation: blink 1.2s infinite;
-            margin-left: 2px;
-            flex-shrink: 0;
-        }
-
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
-        }
-
-        .command {
-            color: var(--command-color);
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .response {
-            color: var(--text-color);
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-
-        .theme-selector {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            background: var(--background);
-            border: 1px solid var(--text-color);
-            padding: 10px;
-            color: var(--text-color);
-            z-index: 1000;
-            border-radius: 5px;
-        }
-
-        .theme-selector select {
-            background: var(--background);
-            color: var(--text-color);
-            border: 1px solid var(--text-color);
-            padding: 5px;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .loading {
-            color: var(--suggestion-color);
-            font-style: italic;
-            margin: 5px 0;
-        }
-
-        .error {
-            color: #ff4444;
-            margin: 5px 0;
-        }
-
-        .success {
-            color: #44ff44;
-            margin: 5px 0;
-        }
-
-        .help-text {
-            margin: 10px 0;
-            padding: 10px;
-            border-left: 3px solid var(--command-color);
-            background-color: rgba(0,0,0,0.1);
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-            body {
-                padding: 15px;
-            }
-            
-            .theme-selector {
-                top: 10px;
-                right: 10px;
-                padding: 8px;
-            }
-            
-            #commandInput {
-                font-size: 16px; /* Keep readable on mobile */
-            }
-            
-            #output {
-                font-size: 14px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            
-            .theme-selector {
-                position: relative;
-                top: 0;
-                right: 0;
-                margin-bottom: 15px;
-                text-align: center;
-            }
-        }
-    </style>
-</head>
-<body class="theme-dark">
-    <div class="theme-selector">
-        <label for="themeSelect">Theme: </label>
-        <select id="themeSelect">
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-            <option value="blue">Blue</option>
-        </select>
-    </div>
-
-    <div id="terminal">
-        <div id="output">
-            <div class="response">COMMAND TERMINAL v2.0</div>
-            <div class="response">System initialized with basic capabilities...</div>
-            <div class="response">Type a command and press Enter to execute</div>
-            <div class="response">Press Tab for suggestions • ↑/↓ for history</div>
-            <div class="response">Type 'help' for available commands</div>
-        </div>
-        
-        <div class="input-line">
-            <span id="prompt">$</span>
-            <input type="text" id="commandInput" autofocus placeholder="Type command here..." aria-label="Command input">
-            <span class="cursor" aria-hidden="true"></span>
-            <div id="suggestions" aria-live="polite"></div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const inputField = document.getElementById('commandInput');
-            const outputDiv = document.getElementById('output');
-            const suggestionsDiv = document.getElementById('suggestions');
-            const themeSelect = document.getElementById('themeSelect');
-            
-            // Initialize command history
-            let commandHistory = [];
-            let historyIndex = -1;
-            let currentInput = '';
-
-            // Available commands
-            const availableCommands = ['help', 'clear', 'theme', 'time', 'date', 'ai'];
-            
-            // Safe math operations
-            const mathOperations = {
-                '+': (a, b) => a + b,
-                '-': (a, b) => a - b,
-                '*': (a, b) => a * b,
-                '/': (a, b) => b !== 0 ? a / b : 'Error: Division by zero',
-                '^': (a, b) => Math.pow(a, b)
-            };
-
-            // Load saved data safely
-            function loadSavedData() {
-                try {
-                    const storedHistory = localStorage.getItem('terminalHistory');
-                    if (storedHistory) {
-                        commandHistory = JSON.parse(storedHistory);
-                    }
-                    
-                    const savedTheme = localStorage.getItem('terminalTheme') || 'dark';
-                    document.body.className = 'theme-' + savedTheme;
-                    themeSelect.value = savedTheme;
-                } catch (error) {
-                    console.log('Error loading saved data:', error);
-                    // Initialize with defaults
-                    commandHistory = [];
-                    document.body.className = 'theme-dark';
-                }
-            }
-
-            // Save data safely
-            function saveData() {
-                try {
-                    localStorage.setItem('terminalHistory', JSON.stringify(commandHistory));
-                    localStorage.setItem('terminalTheme', themeSelect.value);
-                } catch (error) {
-                    console.log('Error saving data:', error);
-                }
-            }
-
-            // Initialize
-            loadSavedData();
-            inputField.focus();
-
-            // Event listeners
-            inputField.addEventListener('keydown', handleKeyDown);
-            themeSelect.addEventListener('change', handleThemeChange);
-            document.addEventListener('click', focusInput);
-
-            function handleKeyDown(event) {
-                suggestionsDiv.style.display = 'none';
-                
-                switch(event.key) {
-                    case 'Enter':
-                        event.preventDefault();
-                        executeCommand();
-                        break;
-                    case 'ArrowUp':
-                        event.preventDefault();
-                        navigateHistory('up');
-                        break;
-                    case 'ArrowDown':
-                        event.preventDefault();
-                        navigateHistory('down');
-                        break;
-                    case 'Tab':
-                        event.preventDefault();
-                        showSuggestions();
-                        break;
-                }
-            }
-
-            function handleThemeChange() {
-                const theme = themeSelect.value;
-                document.body.className = 'theme-' + theme;
-                saveData();
-            }
-
-            function focusInput() {
-                inputField.focus();
-            }
-
-            async function executeCommand() {
-                const command = inputField.value.trim();
-                if (!command) return;
-
-                // Add to history
-                commandHistory.push(command);
-                historyIndex = commandHistory.length;
-                saveData();
-                
-                // Display command
-                displayCommand(command);
-                
-                // Clear input
-                inputField.value = '';
-                currentInput = '';
-                
-                // Process command
-                await processCommand(command);
-                
-                // Scroll to bottom
-                scrollToBottom();
-            }
-
-            function displayCommand(command) {
-                const commandElement = document.createElement('div');
-                commandElement.className = 'command';
-                commandElement.textContent = '$ ' + command;
-                outputDiv.appendChild(commandElement);
-            }
-
-            async function processCommand(command) {
-                const loadingElement = createLoadingElement();
-                outputDiv.appendChild(loadingElement);
-
-                try {
-                    let responseText = '';
-
-                    if (command === 'clear') {
-                        clearTerminal();
-                        loadingElement.remove();
-                        return;
-                    } else if (command === 'help') {
-                        responseText = getHelpText();
-                    } else if (command.startsWith('theme ')) {
-                        responseText = handleThemeCommand(command);
-                    } else if (command === 'time') {
-                        responseText = 'Current time: ' + new Date().toLocaleTimeString();
-                    } else if (command === 'date') {
-                        responseText = 'Today is: ' + new Date().toLocaleDateString();
-                    } else if (command.startsWith('ai ')) {
-                        responseText = await handleAICommand(command);
-                    } else {
-                        responseText = 'Command not recognized. Type "help" for available commands.';
-                    }
-
-                    loadingElement.remove();
-                    displayResponse(responseText);
-
-                } catch (error) {
-                    loadingElement.remove();
-                    displayError('Error: ' + error.message);
-                }
-            }
-
-            function createLoadingElement() {
-                const element = document.createElement('div');
-                element.className = 'loading';
-                element.textContent = 'Processing...';
-                return element;
-            }
-
-            function displayResponse(text) {
-                const element = document.createElement('div');
-                element.className = 'response';
-                element.textContent = text;
-                outputDiv.appendChild(element);
-            }
-
-            function displayError(text) {
-                const element = document.createElement('div');
-                element.className = 'error';
-                element.textContent = text;
-                outputDiv.appendChild(element);
-            }
-
-            function clearTerminal() {
-                outputDiv.innerHTML = '';
-                
-                // Add initial messages
-                const messages = [
-                    'COMMAND TERMINAL v2.0',
-                    'System initialized with basic capabilities...',
-                    'Type a command and press Enter to execute',
-                    'Press Tab for suggestions • ↑/↓ for history',
-                    'Type \'help\' for available commands'
-                ];
-                
-                messages.forEach(msg => {
-                    const element = document.createElement('div');
-                    element.className = 'response';
-                    element.textContent = msg;
-                    outputDiv.appendChild(element);
-                });
-            }
-
-            function getHelpText() {
-                return `Available commands:
-• help - Show this help message
-• clear - Clear the terminal screen
-• theme [dark/light/blue] - Change color theme
-• time - Show current time
-• date - Show current date
-• ai [question] - Ask a question (simulated AI)`;
-            }
-
-            function handleThemeCommand(command) {
-                const theme = command.split(' ')[1];
-                if (['dark', 'light', 'blue'].includes(theme)) {
-                    themeSelect.value = theme;
-                    document.body.className = 'theme-' + theme;
-                    saveData();
-                    return 'Theme changed to ' + theme;
-                } else {
-                    return 'Error: Available themes are dark, light, blue';
-                }
-            }
-
-            async function handleAICommand(command) {
-                const question = command.substring(3).trim();
-                if (!question) {
-                    return 'Please ask a question after \'ai\'';
-                }
-
-                // Simulate AI processing
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                const responses = [
-                    `I understand you're asking about: "${question}". This is a simulated response.`,
-                    `Interesting question about "${question}". In a real implementation, this would connect to an AI API.`,
-                    `Regarding "${question}": This terminal is demonstrating basic functionality. AI integration would be added later.`,
-                    `I received your question about "${question}". This is a placeholder for actual AI processing.`
-                ];
-                
-                return responses[Math.floor(Math.random() * responses.length)];
-            }
-
-            function navigateHistory(direction) {
-                if (commandHistory.length === 0) return;
-                
-                if (direction === 'up') {
-                    if (historyIndex > 0) {
-                        if (historyIndex === commandHistory.length) {
-                            currentInput = inputField.value;
-                        }
-                        historyIndex--;
-                        inputField.value = commandHistory[historyIndex];
-                    }
-                } else {
-                    if (historyIndex < commandHistory.length - 1) {
-                        historyIndex++;
-                        inputField.value = commandHistory[historyIndex];
-                    } else if (historyIndex === commandHistory.length - 1) {
-                        historyIndex = commandHistory.length;
-                        inputField.value = currentInput;
-                    }
-                }
-                
-                moveCursorToEnd();
-            }
-
-            function moveCursorToEnd() {
-                setTimeout(() => {
-                    inputField.setSelectionRange(
-                        inputField.value.length,
-                        inputField.value.length
-                    );
-                }, 0);
-            }
-
-            function showSuggestions() {
-                const input = inputField.value.toLowerCase();
-                if (!input) return;
-                
-                const matches = availableCommands.filter(cmd => 
-                    cmd.startsWith(input)
-                );
-
-                if (matches.length > 0) {
-                    suggestionsDiv.innerHTML = matches.join('<br>');
-                    suggestionsDiv.style.display = 'block';
-                    
-                    if (matches.length === 1) {
-                        inputField.value = matches[0] + ' ';
-                        suggestionsDiv.style.display = 'none';
-                        moveCursorToEnd();
-                    }
-                }
-            }
-
-            function scrollToBottom() {
-                outputDiv.scrollTop = outputDiv.scrollHeight;
-            }
-
-            // Periodically save data
-            setInterval(saveData, 30000); // Save every 30 seconds
-        });
-    </script>
-</body>
-  </html>
+here// ==========================
+// Command Terminal Core Logic
+// ==========================
+
+// State
+let commandHistory = [];
+let historyIndex = -1;
+let suggestions = [];
+let terminalThemes = {
+  dark: { bg: "#000", user: "#9370db", system: "#00ff00", error: "#ff3333", cursor: "#00ff00" },
+  light: { bg: "#f3f3f3", user: "#663399", system: "#008000", error: "#d32f2f", cursor: "#008000" },
+  blue: { bg: "#1a237e", user: "#82b1ff", system: "#00e676", error: "#ff1744", cursor: "#00e676" }
+};
+let currentTheme = "dark";
+let terminalInput, terminalOutput, terminalContainer;
+
+// ==========================
+// Essential Functions
+// ==========================
+
+// 1. Handle keydown events (enter, arrows, tab)
+function handlekeydown(event) {
+  switch (event.key) {
+    case "Enter":
+      executecommand();
+      break;
+    case "ArrowUp":
+      navigatehistory(-1);
+      break;
+    case "ArrowDown":
+      navigatehistory(1);
+      break;
+    case "Tab":
+      event.preventDefault();
+      showsuggestions();
+      break;
+    default:
+      break;
+  }
+}
+
+// 2. Run the user's command
+function executecommand() {
+  const command = terminalInput.value.trim();
+  if (!command) return;
+  displaycommand(command);
+  processcommand(command);
+  commandHistory.push(command);
+  savedata();
+  historyIndex = commandHistory.length;
+  terminalInput.value = "";
+  scrolltobottom();
+}
+
+// 3. Decide what to do with each command
+function processcommand(command) {
+  const [cmd, ...args] = command.split(" ");
+  switch (cmd.toLowerCase()) {
+    case "help":
+      displayresponse(gethelptext());
+      break;
+    case "clear":
+      clearterminal();
+      break;
+    case "theme":
+      handlethemecommand(args.join(" "));
+      break;
+    case "time":
+      displayresponse(`Current Time: ${new Date().toLocaleTimeString()}`);
+      break;
+    case "date":
+      displayresponse(`Current Date: ${new Date().toLocaleDateString()}`);
+      break;
+    case "ai":
+      handleaicommand(args.join(" "));
+      break;
+    default:
+      displayerror(`Unknown command: ${cmd} (type 'help' for options)`);
+      break;
+  }
+}
+
+// 4. Show the user's typed command (purple)
+function displaycommand(text) {
+  appendline(`<span class="user-command">${escapeHTML(text)}</span>`);
+}
+
+// 5. Show system responses (green)
+function displayresponse(text) {
+  appendline(`<span class="system-response">${escapeHTML(text)}</span>`);
+}
+
+// 6. Show error messages (red)
+function displayerror(text) {
+  appendline(`<span class="error-message">${escapeHTML(text)}</span>`);
+}
+
+// 7. Clear the terminal screen
+function clearterminal() {
+  terminalOutput.innerHTML = "";
+}
+
+// 8. Handle arrow up/down for history
+function navigatehistory(direction) {
+  if (commandHistory.length === 0) return;
+  historyIndex += direction;
+  if (historyIndex < 0) historyIndex = 0;
+  if (historyIndex >= commandHistory.length) historyIndex = commandHistory.length;
+  terminalInput.value = commandHistory[historyIndex] || "";
+  movecursortoend();
+}
+
+// 9. Show command suggestions on tab
+function showsuggestions() {
+  const val = terminalInput.value.toLowerCase();
+  const commands = ["help", "clear", "theme", "time", "date", "ai"];
+  suggestions = commands.filter(cmd => cmd.startsWith(val));
+  if (suggestions.length === 1) {
+    terminalInput.value = suggestions[0] + " ";
+    movecursortoend();
+  } else if (suggestions.length > 1) {
+    displayresponse("Suggestions: " + suggestions.join(", "));
+  }
+}
+
+// 10. Auto-scroll to latest output
+function scrolltobottom() {
+  terminalOutput.scrollTop = terminalOutput.scrollHeight;
+}
+
+// 11. Load command history from localStorage
+function loadsaveddata() {
+  let data = localStorage.getItem("terminal_history");
+  if (data) commandHistory = JSON.parse(data);
+  historyIndex = commandHistory.length;
+}
+
+// 12. Save command history to localStorage
+function savedata() {
+  localStorage.setItem("terminal_history", JSON.stringify(commandHistory));
+}
+
+// 13. Focus the input field
+function focusinput() {
+  terminalInput.focus();
+  movecursortoend();
+}
+
+// 14. Return help information text
+function gethelptext() {
+  return `
+Commands:
+- help                Show this help menu
+- clear               Clear the terminal screen
+- theme [dark/light/blue]   Change color theme
+- time                Show current time
+- date                Show current date
+- ai [question]       Ask AI a question
+  `;
+}
+
+// 15. Change color themes
+function handlethemecommand(arg) {
+  let theme = arg.trim().toLowerCase();
+  if (!terminalThemes[theme]) {
+    displayerror("Available themes: dark, light, blue");
+    return;
+  }
+  currentTheme = theme;
+  applytheme();
+  displayresponse(`Theme switched to ${theme}`);
+}
+
+// 16. Process AI questions (simulated)
+function handleaicommand(question) {
+  if (!question) {
+    displayerror("Usage: ai [your question]");
+    return;
+  }
+  // Simulated AI response
+  setTimeout(() => displayresponse("AI: (simulated response) " + question), 400);
+}
+
+// 17. Move cursor to end of input
+function movecursortoend() {
+  const val = terminalInput.value;
+  terminalInput.value = "";
+  terminalInput.value = val;
+}
+
+// ==========================
+// Mobile-Specific Functions
+// ==========================
+
+// 18. Prevents keyboard from hiding terminal (iOS fix)
+function preventkeyboardhide() {
+  window.scrollTo(0, 1); // quick hack for iOS Safari
+}
+
+// 19. Optimize for touch screens
+function handletouchevents() {
+  terminalInput.addEventListener("touchstart", focusinput);
+  terminalContainer.addEventListener("touchend", focusinput);
+}
+
+// 20. Adjust layout for on-screen keyboard
+function adjustlayoutforkeyboard() {
+  window.addEventListener("resize", () => {
+    terminalContainer.style.height = window.innerHeight + "px";
+    scrolltobottom();
+  });
+}
+
+// ==========================
+// Setup Functions
+// ==========================
+
+// 21. Start up the terminal
+function initializeterminal() {
+  terminalInput = document.getElementById("terminal-input");
+  terminalOutput = document.getElementById("terminal-output");
+  terminalContainer = document.getElementById("terminal-container");
+  loadsaveddata();
+  applytheme();
+  setupeventlisteners();
+  focusinput();
+  scrolltobottom();
+}
+
+// 22. Set up all click/touch/keyboard listeners
+function setupeventlisteners() {
+  terminalInput.addEventListener("keydown", handlekeydown);
+  terminalInput.addEventListener("focus", () => setTimeout(scrolltobottom, 100));
+  terminalContainer.addEventListener("click", focusinput);
+  handletouchevents();
+  adjustlayoutforkeyboard();
+}
+
+// ==========================
+// Utility & Enhancement Functions
+// ==========================
+
+// Render a line to the terminal
+function appendline(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  terminalOutput.appendChild(div);
+  scrolltobottom();
+}
+
+// Escape HTML for safety
+function escapeHTML(str) {
+  return str.replace(/[&<>"']/g, m =>
+    m === "&" ? "&amp;" :
+    m === "<" ? "&lt;" :
+    m === ">" ? "&gt;" :
+    m === '"' ? "&quot;" :
+    m === "'" ? "&#039;" : m
+  );
+}
+
+// Apply current theme
+function applytheme() {
+  const theme = terminalThemes[currentTheme];
+  terminalContainer.style.background = theme.bg;
+  terminalOutput.style.background = theme.bg;
+  terminalInput.style.background = theme.bg;
+  document.documentElement.style.setProperty('--user-color', theme.user);
+  document.documentElement.style.setProperty('--system-color', theme.system);
+  document.documentElement.style.setProperty('--error-color', theme.error);
+  document.documentElement.style.setProperty('--cursor-color', theme.cursor);
+}
+
+// ==========================
+// New Enhanced Functions
+// ==========================
+
+// Command aliasing (user can define shortcuts)
+let commandAliases = {};
+function definealias(alias, realCommand) {
+  commandAliases[alias] = realCommand;
+  displayresponse(`Alias set: ${alias} → ${realCommand}`);
+}
+
+// Export session history as text
+function exportsession() {
+  const text = commandHistory.join("\n");
+  navigator.clipboard.writeText(text).then(
+    () => displayresponse("Session copied to clipboard!"),
+    () => displayerror("Clipboard copy failed.")
+  );
+}
+
+// Import session from clipboard
+async function importsession() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text) {
+      commandHistory = text.split("\n").filter(Boolean);
+      savedata();
+      displayresponse("Session imported successfully.");
+    } else {
+      displayerror("Clipboard is empty.");
+    }
+  } catch {
+    displayerror("Clipboard import failed.");
+  }
+}
+
+// Command parsing supports aliases and chaining (cmd1 && cmd2)
+function processcommand(command) {
+  // Alias expansion
+  let expanded = commandAliases[command] || command;
+  // Command chaining with &&
+  if (expanded.includes("&&")) {
+    expanded.split("&&").forEach(cmd => processcommand(cmd.trim()));
+    return;
+  }
+  const [cmd, ...args] = expanded.split(" ");
+  switch (cmd.toLowerCase()) {
+    case "help":
+      displayresponse(gethelptext());
+      break;
+    case "clear":
+      clearterminal();
+      break;
+    case "theme":
+      handlethemecommand(args.join(" "));
+      break;
+    case "time":
+      displayresponse(`Current Time: ${new Date().toLocaleTimeString()}`);
+      break;
+    case "date":
+      displayresponse(`Current Date: ${new Date().toLocaleDateString()}`);
+      break;
+    case "ai":
+      handleaicommand(args.join(" "));
+      break;
+    case "alias":
+      if (args.length >= 2) definealias(args[0], args.slice(1).join(" "));
+      else displayerror("Usage: alias [shortcut] [real command]");
+      break;
+    case "export":
+      exportsession();
+      break;
+    case "import":
+      importsession();
+      break;
+    default:
+      displayerror(`Unknown command: ${cmd}`);
+      break;
+  }
+}
+
+// ==========================
+// Export for module usage
+// ==========================
+export {
+  handlekeydown,
+  executecommand,
+  processcommand,
+  displaycommand,
+  displayresponse,
+  displayerror,
+  clearterminal,
+  navigatehistory,
+  showsuggestions,
+  scrolltobottom,
+  loadsaveddata,
+  savedata,
+  focusinput,
+  gethelptext,
+  handlethemecommand,
+  handleaicommand,
+  movecursortoend,
+  preventkeyboardhide,
+  handletouchevents,
+  adjustlayoutforkeyboard,
+  initializeterminal,
+  setupeventlisteners,
+  definealias,
+  exportsession,
+  importsession
+};// ==========================
+// Command Terminal Core Logic
+// ==========================
+
+// State
+let commandHistory = [];
+let historyIndex = -1;
+let suggestions = [];
+let terminalThemes = {
+  dark: { bg: "#000", user: "#9370db", system: "#00ff00", error: "#ff3333", cursor: "#00ff00" },
+  light: { bg: "#f3f3f3", user: "#663399", system: "#008000", error: "#d32f2f", cursor: "#008000" },
+  blue: { bg: "#1a237e", user: "#82b1ff", system: "#00e676", error: "#ff1744", cursor: "#00e676" }
+};
+let currentTheme = "dark";
+let terminalInput, terminalOutput, terminalContainer;
+
+// ==========================
+// Essential Functions
+// ==========================
+
+// 1. Handle keydown events (enter, arrows, tab)
+function handlekeydown(event) {
+  switch (event.key) {
+    case "Enter":
+      executecommand();
+      break;
+    case "ArrowUp":
+      navigatehistory(-1);
+      break;
+    case "ArrowDown":
+      navigatehistory(1);
+      break;
+    case "Tab":
+      event.preventDefault();
+      showsuggestions();
+      break;
+    default:
+      break;
+  }
+}
+
+// 2. Run the user's command
+function executecommand() {
+  const command = terminalInput.value.trim();
+  if (!command) return;
+  displaycommand(command);
+  processcommand(command);
+  commandHistory.push(command);
+  savedata();
+  historyIndex = commandHistory.length;
+  terminalInput.value = "";
+  scrolltobottom();
+}
+
+// 3. Decide what to do with each command
+function processcommand(command) {
+  const [cmd, ...args] = command.split(" ");
+  switch (cmd.toLowerCase()) {
+    case "help":
+      displayresponse(gethelptext());
+      break;
+    case "clear":
+      clearterminal();
+      break;
+    case "theme":
+      handlethemecommand(args.join(" "));
+      break;
+    case "time":
+      displayresponse(`Current Time: ${new Date().toLocaleTimeString()}`);
+      break;
+    case "date":
+      displayresponse(`Current Date: ${new Date().toLocaleDateString()}`);
+      break;
+    case "ai":
+      handleaicommand(args.join(" "));
+      break;
+    default:
+      displayerror(`Unknown command: ${cmd} (type 'help' for options)`);
+      break;
+  }
+}
+
+// 4. Show the user's typed command (purple)
+function displaycommand(text) {
+  appendline(`<span class="user-command">${escapeHTML(text)}</span>`);
+}
+
+// 5. Show system responses (green)
+function displayresponse(text) {
+  appendline(`<span class="system-response">${escapeHTML(text)}</span>`);
+}
+
+// 6. Show error messages (red)
+function displayerror(text) {
+  appendline(`<span class="error-message">${escapeHTML(text)}</span>`);
+}
+
+// 7. Clear the terminal screen
+function clearterminal() {
+  terminalOutput.innerHTML = "";
+}
+
+// 8. Handle arrow up/down for history
+function navigatehistory(direction) {
+  if (commandHistory.length === 0) return;
+  historyIndex += direction;
+  if (historyIndex < 0) historyIndex = 0;
+  if (historyIndex >= commandHistory.length) historyIndex = commandHistory.length;
+  terminalInput.value = commandHistory[historyIndex] || "";
+  movecursortoend();
+}
+
+// 9. Show command suggestions on tab
+function showsuggestions() {
+  const val = terminalInput.value.toLowerCase();
+  const commands = ["help", "clear", "theme", "time", "date", "ai"];
+  suggestions = commands.filter(cmd => cmd.startsWith(val));
+  if (suggestions.length === 1) {
+    terminalInput.value = suggestions[0] + " ";
+    movecursortoend();
+  } else if (suggestions.length > 1) {
+    displayresponse("Suggestions: " + suggestions.join(", "));
+  }
+}
+
+// 10. Auto-scroll to latest output
+function scrolltobottom() {
+  terminalOutput.scrollTop = terminalOutput.scrollHeight;
+}
+
+// 11. Load command history from localStorage
+function loadsaveddata() {
+  let data = localStorage.getItem("terminal_history");
+  if (data) commandHistory = JSON.parse(data);
+  historyIndex = commandHistory.length;
+}
+
+// 12. Save command history to localStorage
+function savedata() {
+  localStorage.setItem("terminal_history", JSON.stringify(commandHistory));
+}
+
+// 13. Focus the input field
+function focusinput() {
+  terminalInput.focus();
+  movecursortoend();
+}
+
+// 14. Return help information text
+function gethelptext() {
+  return `
+Commands:
+- help                Show this help menu
+- clear               Clear the terminal screen
+- theme [dark/light/blue]   Change color theme
+- time                Show current time
+- date                Show current date
+- ai [question]       Ask AI a question
+  `;
+}
+
+// 15. Change color themes
+function handlethemecommand(arg) {
+  let theme = arg.trim().toLowerCase();
+  if (!terminalThemes[theme]) {
+    displayerror("Available themes: dark, light, blue");
+    return;
+  }
+  currentTheme = theme;
+  applytheme();
+  displayresponse(`Theme switched to ${theme}`);
+}
+
+// 16. Process AI questions (simulated)
+function handleaicommand(question) {
+  if (!question) {
+    displayerror("Usage: ai [your question]");
+    return;
+  }
+  // Simulated AI response
+  setTimeout(() => displayresponse("AI: (simulated response) " + question), 400);
+}
+
+// 17. Move cursor to end of input
+function movecursortoend() {
+  const val = terminalInput.value;
+  terminalInput.value = "";
+  terminalInput.value = val;
+}
+
+// ==========================
+// Mobile-Specific Functions
+// ==========================
+
+// 18. Prevents keyboard from hiding terminal (iOS fix)
+function preventkeyboardhide() {
+  window.scrollTo(0, 1); // quick hack for iOS Safari
+}
+
+// 19. Optimize for touch screens
+function handletouchevents() {
+  terminalInput.addEventListener("touchstart", focusinput);
+  terminalContainer.addEventListener("touchend", focusinput);
+}
+
+// 20. Adjust layout for on-screen keyboard
+function adjustlayoutforkeyboard() {
+  window.addEventListener("resize", () => {
+    terminalContainer.style.height = window.innerHeight + "px";
+    scrolltobottom();
+  });
+}
+
+// ==========================
+// Setup Functions
+// ==========================
+
+// 21. Start up the terminal
+function initializeterminal() {
+  terminalInput = document.getElementById("terminal-input");
+  terminalOutput = document.getElementById("terminal-output");
+  terminalContainer = document.getElementById("terminal-container");
+  loadsaveddata();
+  applytheme();
+  setupeventlisteners();
+  focusinput();
+  scrolltobottom();
+}
+
+// 22. Set up all click/touch/keyboard listeners
+function setupeventlisteners() {
+  terminalInput.addEventListener("keydown", handlekeydown);
+  terminalInput.addEventListener("focus", () => setTimeout(scrolltobottom, 100));
+  terminalContainer.addEventListener("click", focusinput);
+  handletouchevents();
+  adjustlayoutforkeyboard();
+}
+
+// ==========================
+// Utility & Enhancement Functions
+// ==========================
+
+// Render a line to the terminal
+function appendline(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  terminalOutput.appendChild(div);
+  scrolltobottom();
+}
+
+// Escape HTML for safety
+function escapeHTML(str) {
+  return str.replace(/[&<>"']/g, m =>
+    m === "&" ? "&amp;" :
+    m === "<" ? "&lt;" :
+    m === ">" ? "&gt;" :
+    m === '"' ? "&quot;" :
+    m === "'" ? "&#039;" : m
+  );
+}
+
+// Apply current theme
+function applytheme() {
+  const theme = terminalThemes[currentTheme];
+  terminalContainer.style.background = theme.bg;
+  terminalOutput.style.background = theme.bg;
+  terminalInput.style.background = theme.bg;
+  document.documentElement.style.setProperty('--user-color', theme.user);
+  document.documentElement.style.setProperty('--system-color', theme.system);
+  document.documentElement.style.setProperty('--error-color', theme.error);
+  document.documentElement.style.setProperty('--cursor-color', theme.cursor);
+}
+
+// ==========================
+// New Enhanced Functions
+// ==========================
+
+// Command aliasing (user can define shortcuts)
+let commandAliases = {};
+function definealias(alias, realCommand) {
+  commandAliases[alias] = realCommand;
+  displayresponse(`Alias set: ${alias} → ${realCommand}`);
+}
+
+// Export session history as text
+function exportsession() {
+  const text = commandHistory.join("\n");
+  navigator.clipboard.writeText(text).then(
+    () => displayresponse("Session copied to clipboard!"),
+    () => displayerror("Clipboard copy failed.")
+  );
+}
+
+// Import session from clipboard
+async function importsession() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text) {
+      commandHistory = text.split("\n").filter(Boolean);
+      savedata();
+      displayresponse("Session imported successfully.");
+    } else {
+      displayerror("Clipboard is empty.");
+    }
+  } catch {
+    displayerror("Clipboard import failed.");
+  }
+}
+
+// Command parsing supports aliases and chaining (cmd1 && cmd2)
+function processcommand(command) {
+  // Alias expansion
+  let expanded = commandAliases[command] || command;
+  // Command chaining with &&
+  if (expanded.includes("&&")) {
+    expanded.split("&&").forEach(cmd => processcommand(cmd.trim()));
+    return;
+  }
+  const [cmd, ...args] = expanded.split(" ");
+  switch (cmd.toLowerCase()) {
+    case "help":
+      displayresponse(gethelptext());
+      break;
+    case "clear":
+      clearterminal();
+      break;
+    case "theme":
+      handlethemecommand(args.join(" "));
+      break;
+    case "time":
+      displayresponse(`Current Time: ${new Date().toLocaleTimeString()}`);
+      break;
+    case "date":
+      displayresponse(`Current Date: ${new Date().toLocaleDateString()}`);
+      break;
+    case "ai":
+      handleaicommand(args.join(" "));
+      break;
+    case "alias":
+      if (args.length >= 2) definealias(args[0], args.slice(1).join(" "));
+      else displayerror("Usage: alias [shortcut] [real command]");
+      break;
+    case "export":
+      exportsession();
+      break;
+    case "import":
+      importsession();
+      break;
+    default:
+      displayerror(`Unknown command: ${cmd}`);
+      break;
+  }
+}
+
+// ==========================
+// Export for module usage
+// ==========================
+export {
+  handlekeydown,
+  executecommand,
+  processcommand,
+  displaycommand,
+  displayresponse,
+  displayerror,
+  clearterminal,
+  navigatehistory,
+  showsuggestions,
+  scrolltobottom,
+  loadsaveddata,
+  savedata,
+  focusinput,
+  gethelptext,
+  handlethemecommand,
+  handleaicommand,
+  movecursortoend,
+  preventkeyboardhide,
+  handletouchevents,
+  adjustlayoutforkeyboard,
+  initializeterminal,
+  setupeventlisteners,
+  definealias,
+  exportsession,
+  importsession
+};
