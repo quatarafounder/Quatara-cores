@@ -241,3 +241,109 @@ here<!DOCTYPE html>
                              '\nAccess: ' + accessLevel.toUpperCase() +
                              '\nCommands: ' + commandHistory.length +
                              '\nSecurity: Active';
+            }
+            else if (cmd === 'access') {
+                responseText = 'Access system: Contact administrator for elevated privileges';
+                responseClass = 'error';
+            }
+            else if (cmd.startsWith('user ')) {
+                const newUser = command.substring(5).trim();
+                if (newUser) {
+                    currentUser = newUser;
+                    userInfo.textContent = currentUser + '@x-n-metric:~$';
+                    localStorage.setItem('terminal_user', currentUser);
+                    responseText = 'User changed to: ' + currentUser;
+                }
+            }
+            else if (cmd.startsWith('ai ')) {
+                responseText = processAICommand(command.substring(3));
+                responseClass = 'ai-response';
+            }
+            else {
+                // Handle potential CI-tech access attempts securely
+                if (cmd.includes('tech') || cmd.includes('ci') || cmd.includes('system')) {
+                    responseText = 'Command requires authorization. Use: access [credentials]';
+                    responseClass = 'error';
+                } else {
+                    responseText = 'Unknown command: "' + command + '"\nType "help" for commands';
+                    responseClass = 'error';
+                }
+            }
+            
+            displayResponse(responseText, responseClass);
+        }
+        
+        // Display command
+        function displayCommand(cmd) {
+            const commandElement = document.createElement('div');
+            commandElement.className = 'command';
+            commandElement.textContent = '$ ' + cmd;
+            outputDiv.appendChild(commandElement);
+        }
+        
+        // Display response
+        function displayResponse(text, className = 'response') {
+            const responseElement = document.createElement('div');
+            responseElement.className = className;
+            responseElement.textContent = text;
+            outputDiv.appendChild(responseElement);
+        }
+        
+        // Get help text (PUBLIC VERSION ONLY)
+        function getHelpText() {
+            return "PUBLIC COMMANDS:\n\n" +
+                   "help      - Show this help\n" +
+                   "clear     - Clear terminal\n" + 
+                   "time      - Show current time\n" +
+                   "date      - Show current date\n" +
+                   "status    - System information\n" +
+                   "user      - Change username\n" +
+                   "ai        - Ask AI a question\n\n" +
+                   "For advanced access, contact system administrator.";
+        }
+        
+        // Process AI commands
+        function processAICommand(question) {
+            const responses = [
+                'Response: Processing your question about "' + question + '"',
+                'Analysis: Topic received - "' + question + '"',
+                'AI: Generating response for: "' + question + '"',
+                'System: Question logged - "' + question + '"'
+            ];
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+        
+        // Clear terminal
+        function clearTerminal() {
+            outputDiv.innerHTML = '';
+            displayResponse('Terminal cleared. Public access mode.', 'success');
+        }
+        
+        // Show help
+        function showHelp() {
+            displayResponse(getHelpText());
+            scrollToBottom();
+        }
+        
+        // Scroll to bottom
+        function scrollToBottom() {
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+        
+        // Event listeners
+        commandInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') executeCommand();
+        });
+        
+        document.addEventListener('click', function() {
+            commandInput.focus();
+        });
+        
+        // Initialize terminal
+        init();
+        
+        // Security reminder
+        console.log('Security: CI-tech access disabled in public code');
+    </script>
+</body>
+</html>
