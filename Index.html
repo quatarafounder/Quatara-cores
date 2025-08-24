@@ -117,25 +117,33 @@ here<!DOCTYPE html>
             color: #00ff00;
             font-size: 11px;
         }
+        
+        .admin-mode {
+            border: 2px solid #ff4444;
+            background: rgba(255, 0, 0, 0.1) !important;
+        }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div class="user-info" id="userInfo">User: Guest</div>
+    <div class="user-info" id="userInfo">Guest@terminal:~$</div>
     
     <div id="terminal">
         <div id="output">
-            <div class="response">=== COMMAND TERMINAL PRO ===</div>
+            <div class="response">=== X-N METRIC TERMINAL ===</div>
             <div class="response">- System: Online</div>
-            <div class="response">- Memory: Stable</div>
-            <div class="response">- AI: Ready</div>
-            <div class="response">- Security: Active</div>
+            <div class="response">- Security: Standard</div>
+            <div class="response">- Access: Public</div>
             <div class="response">===========================</div>
             <div class="response">Type 'help' for command list</div>
-            <div class="response">Type 'menu' for quick actions</div>
+            <div class="response">Authorized users only</div>
         </div>
         
         <div class="input-line">
-            <span id="prompt">></span>
+            <span id="prompt">$</span>
             <input type="text" id="commandInput" placeholder="Type command..." autofocus>
         </div>
         
@@ -148,37 +156,49 @@ here<!DOCTYPE html>
     </div>
 
     <script>
-        // Simple terminal functionality
+        // Terminal state - NO SECRETS IN CODE
         const commandHistory = [];
-        let currentUser = 'Guest';
+        let currentUser = 'guest';
+        let accessLevel = 'public'; // public, admin, founder
+        let securityCheckEnabled = true;
         
         const commandInput = document.getElementById('commandInput');
         const outputDiv = document.getElementById('output');
         const userInfo = document.getElementById('userInfo');
+        const terminal = document.getElementById('terminal');
         
-        // Focus input on load
-        commandInput.focus();
-        
-        // Handle Enter key
-        commandInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                executeCommand();
+        // Initialize
+        function init() {
+            commandInput.focus();
+            userInfo.textContent = currentUser + '@x-n-metric:~$';
+            
+            // Load basic settings only (no secrets)
+            const savedUser = localStorage.getItem('terminal_user');
+            if (savedUser) {
+                currentUser = savedUser;
+                userInfo.textContent = currentUser + '@x-n-metric:~$';
             }
-        });
+        }
         
         // Execute command function
         function executeCommand() {
             const command = commandInput.value.trim();
             if (!command) return;
             
+            // Security check - prevent certain commands in public mode
+            if (securityCheckEnabled && accessLevel === 'public') {
+                if (isRestrictedCommand(command)) {
+                    displayResponse('Command restricted in public mode', 'error');
+                    commandInput.value = '';
+                    return;
+                }
+            }
+            
             // Add to history
             commandHistory.push(command);
             
             // Display command
-            const commandElement = document.createElement('div');
-            commandElement.className = 'command';
-            commandElement.textContent = '> ' + command;
-            outputDiv.appendChild(commandElement);
+            displayCommand(command);
             
             // Clear input
             commandInput.value = '';
@@ -188,6 +208,12 @@ here<!DOCTYPE html>
             
             // Scroll to bottom
             scrollToBottom();
+        }
+        
+        // Check for restricted commands
+        function isRestrictedCommand(command) {
+            const restricted = ['ci-tech', 'access', 'admin', 'root', 'system'];
+            return restricted.some(cmd => command.toLowerCase().includes(cmd));
         }
         
         // Process different commands
@@ -211,96 +237,7 @@ here<!DOCTYPE html>
                 responseText = 'Date: ' + new Date().toLocaleDateString();
             }
             else if (cmd === 'status') {
-                responseText = 'Status: Online\nCommands: ' + commandHistory.length + '\nUser: ' + currentUser;
-            }
-            else if (cmd === 'menu') {
-                responseText = "Menu: help, clear, time, date, status, theme, user, ai";
-            }
-            else if (cmd.startsWith('theme ')) {
-                responseText = changeTheme(command.substring(6));
-            }
-            else if (cmd.startsWith('user ')) {
-                currentUser = command.substring(5);
-                userInfo.textContent = 'User: ' + currentUser;
-                responseText = 'User changed to: ' + currentUser;
-            }
-            else if (cmd.startsWith('ai ')) {
-                responseText = processAICommand(command.substring(3));
-                responseClass = 'ai-response';
-            }
-            else {
-                responseText = 'Unknown command: "' + command + '"\nType "help" for commands';
-                responseClass = 'error';
-            }
-            
-            const responseElement = document.createElement('div');
-            responseElement.className = responseClass;
-            responseElement.textContent = responseText;
-            outputDiv.appendChild(responseElement);
-        }
-        
-        // Get help text
-        function getHelpText() {
-            return "COMMANDS:\nhelp - Show help\nclear - Clear terminal\ntime - Show time\ndate - Show date\nstatus - System info\nmenu - Quick menu\ntheme [color] - Change theme\nuser [name] - Change user\nai [question] - Ask AI";
-        }
-        
-        // Change theme
-        function changeTheme(theme) {
-            switch(theme.toLowerCase()) {
-                case 'blue':
-                    document.body.style.backgroundColor = '#001f3f';
-                    return 'Theme changed to Blue';
-                case 'light':
-                    document.body.style.backgroundColor = 'white';
-                    document.body.style.color = 'black';
-                    return 'Theme changed to Light';
-                case 'dark':
-                    document.body.style.backgroundColor = 'black';
-                    document.body.style.color = '#00ff00';
-                    return 'Theme changed to Dark';
-                default:
-                    return 'Available themes: blue, light, dark';
-            }
-        }
-        
-        // Process AI commands
-        function processAICommand(question) {
-            const responses = [
-                'AI: Processing your question about "' + question + '"',
-                'AI: I understand you ask about "' + question + '"',
-                'AI: Question received: "' + question + '"',
-                'AI: Analyzing your question: "' + question + '"'
-            ];
-            return responses[Math.floor(Math.random() * responses.length)];
-        }
-        
-        // Clear terminal
-        function clearTerminal() {
-            outputDiv.innerHTML = '';
-            const responseElement = document.createElement('div');
-            responseElement.className = 'response';
-            responseElement.textContent = 'Terminal cleared. Ready for commands.';
-            outputDiv.appendChild(responseElement);
-        }
-        
-        // Show help
-        function showHelp() {
-            const responseElement = document.createElement('div');
-            responseElement.className = 'response';
-            responseElement.textContent = getHelpText();
-            outputDiv.appendChild(responseElement);
-            scrollToBottom();
-        }
-        
-        // Scroll to bottom
-        function scrollToBottom() {
-            outputDiv.scrollTop = outputDiv.scrollHeight;
-        }
-        
-        // Keep input focused
-        document.addEventListener('click', function() {
-            commandInput.focus();
-        });
-    </script>
-</body>
-    </html>
+                responseText = 'User: ' + currentUser + 
+                             '\nAccess: ' + accessLevel.toUpperCase() +
+                             '\nCommands: ' + commandHistory.length +
+                             '\nSecurity: Active';
