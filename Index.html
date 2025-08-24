@@ -1,1 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .terminal-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background-color: #111;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background-color: #222;
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .terminal-title {
+            color: #9370db;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .terminal-body {
+            padding: 20px;
+            min-height: 400px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .command-history {
+            margin-bottom: 20px;
+        }
+
+        .command-line {
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+
+        .command-input {
+            color: #9370db;
+            font-weight: bold;
+        }
+
+        .command-output {
+            color: #9370db;
+            margin-left: 20px;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            background-color: #222;
+            padding: 10px;
+            border-top: 1px solid #333;
+        }
+
+        .prompt {
+            color: #00ff00;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        #command-input {
+            background-color: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            outline: none;
+            flex: 1;
+            padding: 5px;
+        }
+
+        #command-input::placeholder {
+            color: #666;
+        }
+
+        .help-text {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Scrollbar styling */
+        .terminal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-body::-webkit-scrollbar-track {
+            background: #222;
+        }
+
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        .terminal-body::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="terminal-title">COMMAND TERMINAL v1.0</div>
+        </div>
+        
+        <div class="terminal-body" id="terminal-output">
+            <div class="command-history" id="command-history">
+                <div class="command-line">
+                    <span class="command-input">System initialized...</span>
+                </div>
+                <div class="command-line">
+                    <span class="command-input">Type a command and press Enter to execute</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <span class="prompt">$</span>
+            <input 
+                type="text" 
+                id="command-input" 
+                placeholder="Type your command here..." 
+                autocomplete="off"
+            >
+        </div>
+    </div>
+
+    <p class="help-text">Press Enter to execute commands • Press Arrow Up/Down for command history</p>
+
+    <script>
+        const commandInput = document.getElementById('command-input');
+        const commandHistory = document.getElementById('command-history');
+        const terminalOutput = document.getElementById('terminal-output');
+        
+        let commandHistoryStack = [];
+        let historyIndex = -1;
+
+        // Focus input on page load
+        window.addEventListener('load', () => {
+            commandInput.focus();
+        });
+
+        // Handle command input
+        commandInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const command = commandInput.value.trim();
+                
+                if (command) {
+                    // Add to history
+                    commandHistoryStack.push(command);
+                    historyIndex = commandHistoryStack.length;
+                    
+                    // Display the command
+                    displayCommand(command);
+                    
+                    // Clear input
+                    commandInput.value = '';
+                    
+                    // Scroll to bottom
+                    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                }
+            }
+            
+            // Handle arrow keys for command history
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (commandHistoryStack.length > 0) {
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                    }
+                    commandInput.value = commandHistoryStack[historyIndex] || '';
+                }
+            }
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < commandHistoryStack.length - 1) {
+                    historyIndex++;
+                    commandInput.value = commandHistoryStack[historyIndex] || '';
+                } else {
+                    historyIndex = commandHistoryStack.length;
+                    commandInput.value = '';
+                }
+            }
+        });
+
+        function displayCommand(command) {
+            const commandLine = document.createElement('div');
+            commandLine.className = 'command-line';
+            
+            const promptSpan = document.createElement('span');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .terminal-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background-color: #111;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background-color: #222;
+            padding: 15px 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .terminal-title {
+            color: #9370db;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .terminal-body {
+            padding: 20px;
+            min-height: 400px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .command-history {
+            margin-bottom: 20px;
+        }
+
+        .command-line {
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+
+        .command-input {
+            color: #9370db;
+            font-weight: bold;
+        }
+
+        .command-output {
+            color: #9370db;
+            margin-left: 20px;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            background-color: #222;
+            padding: 10px;
+            border-top: 1px solid #333;
+        }
+
+        .prompt {
+            color: #00ff00;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        #command-input {
+            background-color: transparent;
+            border: none;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            outline: none;
+            flex: 1;
+            padding: 5px;
+        }
+
+        #command-input::placeholder {
+            color: #666;
+        }
+
+        .help-text {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Scrollbar styling */
+        .terminal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-body::-webkit-scrollbar-track {
+            background: #222;
+        }
+
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+        .terminal-body::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div class="terminal-title">COMMAND TERMINAL v1.0</div>
+        </div>
+        
+        <div class="terminal-body" id="terminal-output">
+            <div class="command-history" id="command-history">
+                <div class="command-line">
+                    <span class="command-input">System initialized...</span>
+                </div>
+                <div class="command-line">
+                    <span class="command-input">Type a command and press Enter to execute</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <span class="prompt">$</span>
+            <input 
+                type="text" 
+                id="command-input" 
+                placeholder="Type your command here..." 
+                autocomplete="off"
+            >
+        </div>
+    </div>
+
+    <p class="help-text">Press Enter to execute commands • Press Arrow Up/Down for command history</p>
+
+    <script>
+        const commandInput = document.getElementById('command-input');
+        const commandHistory = document.getElementById('command-history');
+        const terminalOutput = document.getElementById('terminal-output');
+        
+        let commandHistoryStack = [];
+        let historyIndex = -1;
+
+        // Focus input on page load
+        window.addEventListener('load', () => {
+            commandInput.focus();
+        });
+
+        // Handle command input
+        commandInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const command = commandInput.value.trim();
+                
+                if (command) {
+                    // Add to history
+                    commandHistoryStack.push(command);
+                    historyIndex = commandHistoryStack.length;
+                    
+                    // Display the command
+                    displayCommand(command);
+                    
+                    // Clear input
+                    commandInput.value = '';
+                    
+                    // Scroll to bottom
+                    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                }
+            }
+            
+            // Handle arrow keys for command history
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (commandHistoryStack.length > 0) {
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                    }
+                    commandInput.value = commandHistoryStack[historyIndex] || '';
+                }
+            }
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < commandHistoryStack.length - 1) {
+                    historyIndex++;
+                    commandInput.value = commandHistoryStack[historyIndex] || '';
+                } else {
+                    historyIndex = commandHistoryStack.length;
+                    commandInput.value = '';
+                }
+            }
+        });
+
+        function displayCommand(command) {
+            const commandLine = document.createElement('div');
+            commandLine.className = 'command-line';
+            
+            const promptSpan = document.createElement('span');
+            promptSpan.className = 'prompt';
+            promptSpan.textContent = '$';
+            promptSpan.style.marginRight = '10px';
+            
+            const commandSpan = document.createElement('span');
+            commandSpan.className = 'command-input';
+            commandSpan.textContent = command;
+            commandSpan.style.color = '#9370db';
+            
+            commandLine.appendChild(promptSpan);
+            commandLine.appendChild(commandSpan);
+            
+            commandHistory.appendChild(commandLine);
+        }
+
+        // Add some example functionality
+        commandInput.addEventListener('input', (e) => {
+            // Simple validation - you can extend this
+            const value = e.target.value;
+            if (value.includes('clear')) {
+                // Don't allow clear in input to prevent accidental clearing
+                e.target.value = value.replace('clear', '');
+            }
+        });
+
+        // Add click to focus
+        terminalOutput.addEventListener('click', () => {
+            commandInput.focus();
+        });
+
+        // Add some visual feedback
+        commandInput.addEventListener('focus', () => {
+            commandInput.style.backgroundColor = '#333';
+        });
+
+        commandInput.addEventListener('blur', () => {
+            commandInput.style.backgroundColor = 'transparent';
+        });
+    </script>
+</body>
+</html>
 
