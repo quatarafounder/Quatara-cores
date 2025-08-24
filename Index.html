@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+here<!DOCTYPE html>
 <html>
 <head>
     <title>Command Terminal Pro</title>
@@ -15,9 +15,8 @@
             background-color: black;
             color: #00ff00;
             font-family: 'Courier New', monospace;
-            padding: 20px;
+            padding: 15px;
             min-height: 100vh;
-            touch-action: manipulation;
         }
         
         #terminal {
@@ -26,34 +25,33 @@
         }
         
         #output {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             line-height: 1.5;
             min-height: 60vh;
             overflow-y: auto;
-            padding: 15px;
+            padding: 12px;
             border: 1px solid #333;
-            border-radius: 8px;
+            border-radius: 5px;
             background: rgba(0, 0, 0, 0.3);
+            font-size: 14px;
         }
         
         .input-line {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px;
+            gap: 8px;
+            padding: 10px;
             background: #111;
-            border-radius: 8px;
+            border-radius: 5px;
             position: fixed;
-            bottom: 70px;
-            left: 20px;
-            right: 20px;
-            box-shadow: 0 2px 10px rgba(0,255,0,0.1);
+            bottom: 60px;
+            left: 15px;
+            right: 15px;
         }
         
         #prompt {
             color: #00ff00;
             font-weight: bold;
-            font-size: 18px;
         }
         
         #commandInput {
@@ -64,21 +62,18 @@
             font-size: 16px;
             flex: 1;
             outline: none;
-            padding: 10px;
+            padding: 8px;
         }
         
         .command {
             color: #9370db;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-weight: bold;
-            font-size: 16px;
         }
         
         .response {
             color: #00ff00;
-            margin-bottom: 10px;
-            font-size: 15px;
-            line-height: 1.6;
+            margin-bottom: 8px;
         }
         
         .error {
@@ -91,17 +86,15 @@
         
         .ai-response {
             color: #ffa500;
-            font-style: italic;
         }
         
         .mobile-buttons {
             display: flex;
-            gap: 8px;
-            margin-top: 15px;
+            gap: 5px;
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
             justify-content: center;
         }
         
@@ -109,36 +102,20 @@
             background: #222;
             color: #00ff00;
             border: 1px solid #00ff00;
-            padding: 12px 15px;
-            border-radius: 6px;
+            padding: 10px;
+            border-radius: 5px;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-size: 12px;
             cursor: pointer;
             flex: 1;
-            max-width: 120px;
-        }
-        
-        .mobile-btn:active {
-            background: #00ff00;
-            color: black;
         }
         
         .user-info {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 15px;
+            right: 15px;
             color: #00ff00;
-            font-size: 12px;
-        }
-        
-        /* Scrollbar styling */
-        #output::-webkit-scrollbar {
-            width: 5px;
-        }
-        
-        #output::-webkit-scrollbar-thumb {
-            background: #00ff00;
-            border-radius: 10px;
+            font-size: 11px;
         }
     </style>
 </head>
@@ -147,48 +124,47 @@
     
     <div id="terminal">
         <div id="output">
-            <div class="response">=== COMMAND TERMINAL PRO v3.0 ===</div>
-            <div class="response">● System: Online</div>
-            <div class="response">● Memory: Stable</div>
-            <div class="response">● AI: Ready</div>
-            <div class="response">● Security: Active</div>
-            <div class="response">================================</div>
+            <div class="response">=== COMMAND TERMINAL PRO ===</div>
+            <div class="response">- System: Online</div>
+            <div class="response">- Memory: Stable</div>
+            <div class="response">- AI: Ready</div>
+            <div class="response">- Security: Active</div>
+            <div class="response">===========================</div>
             <div class="response">Type 'help' for command list</div>
             <div class="response">Type 'menu' for quick actions</div>
         </div>
         
         <div class="input-line">
-            <span id="prompt">➜</span>
-            <input type="text" id="commandInput" placeholder="Enter command..." autofocus>
+            <span id="prompt">></span>
+            <input type="text" id="commandInput" placeholder="Type command..." autofocus>
         </div>
         
         <div class="mobile-buttons">
-            <button class="mobile-btn" onclick="executeCommand()">⏎ EXECUTE</button>
-            <button class="mobile-btn" onclick="scrollToBottom()">▼ SCROLL</button>
-            <button class="mobile-btn" onclick="clearTerminal()">⌫ CLEAR</button>
-            <button class="mobile-btn" onclick="showHelp()">❓ HELP</button>
+            <button class="mobile-btn" onclick="executeCommand()">EXECUTE</button>
+            <button class="mobile-btn" onclick="scrollToBottom()">SCROLL</button>
+            <button class="mobile-btn" onclick="clearTerminal()">CLEAR</button>
+            <button class="mobile-btn" onclick="showHelp()">HELP</button>
         </div>
     </div>
 
     <script>
-        // Enhanced terminal functionality
+        // Simple terminal functionality
         const commandHistory = [];
-        let historyIndex = -1;
         let currentUser = 'Guest';
-        let sessionStart = new Date();
         
         const commandInput = document.getElementById('commandInput');
         const outputDiv = document.getElementById('output');
         const userInfo = document.getElementById('userInfo');
         
-        // Initialize terminal
-        function initTerminal() {
-            commandInput.focus();
-            userInfo.textContent = `User: ${currentUser} | ${getTime()}`;
-            
-            // Load saved data if available
-            loadSessionData();
-        }
+        // Focus input on load
+        commandInput.focus();
+        
+        // Handle Enter key
+        commandInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                executeCommand();
+            }
+        });
         
         // Execute command function
         function executeCommand() {
@@ -197,11 +173,12 @@
             
             // Add to history
             commandHistory.push(command);
-            historyIndex = commandHistory.length;
-            saveSessionData();
             
             // Display command
-            displayCommand(command);
+            const commandElement = document.createElement('div');
+            commandElement.className = 'command';
+            commandElement.textContent = '> ' + command;
+            outputDiv.appendChild(commandElement);
             
             // Clear input
             commandInput.value = '';
@@ -211,14 +188,6 @@
             
             // Scroll to bottom
             scrollToBottom();
-        }
-        
-        // Display user command
-        function displayCommand(cmd) {
-            const commandElement = document.createElement('div');
-            commandElement.className = 'command';
-            commandElement.innerHTML = `<span style="color:#00ff00">➜</span> ${cmd}`;
-            outputDiv.appendChild(commandElement);
         }
         
         // Process different commands
@@ -236,59 +205,43 @@
                 return;
             }
             else if (cmd === 'time') {
-                responseText = `🕒 System Time: ${new Date().toLocaleTimeString()}`;
+                responseText = 'Time: ' + new Date().toLocaleTimeString();
             }
             else if (cmd === 'date') {
-                responseText = `📅 System Date: ${new Date().toLocaleDateString()}`;
+                responseText = 'Date: ' + new Date().toLocaleDateString();
             }
             else if (cmd === 'status') {
-                responseText = `📊 Terminal Status:\n● Uptime: ${getUptime()}\n● Commands: ${commandHistory.length}\n● User: ${currentUser}\n● Memory: Stable`;
+                responseText = 'Status: Online\nCommands: ' + commandHistory.length + '\nUser: ' + currentUser;
             }
             else if (cmd === 'menu') {
-                responseText = "📋 Quick Menu:\n● help - Show commands\n● clear - Clean screen\n● time - Current time\n● date - Today's date\n● status - System info\n● theme - Change colors\n● ai [question] - Ask AI";
+                responseText = "Menu: help, clear, time, date, status, theme, user, ai";
             }
             else if (cmd.startsWith('theme ')) {
                 responseText = changeTheme(command.substring(6));
             }
             else if (cmd.startsWith('user ')) {
                 currentUser = command.substring(5);
-                userInfo.textContent = `User: ${currentUser} | ${getTime()}`;
-                responseText = `👤 User changed to: ${currentUser}`;
+                userInfo.textContent = 'User: ' + currentUser;
+                responseText = 'User changed to: ' + currentUser;
             }
             else if (cmd.startsWith('ai ')) {
                 responseText = processAICommand(command.substring(3));
                 responseClass = 'ai-response';
             }
             else {
-                responseText = `❌ Unknown command: "${command}"\n💡 Type 'help' for available commands`;
+                responseText = 'Unknown command: "' + command + '"\nType "help" for commands';
                 responseClass = 'error';
             }
             
-            displayResponse(responseText, responseClass);
-        }
-        
-        // Display system response
-        function displayResponse(text, className = 'response') {
             const responseElement = document.createElement('div');
-            responseElement.className = className;
-            responseElement.textContent = text;
+            responseElement.className = responseClass;
+            responseElement.textContent = responseText;
             outputDiv.appendChild(responseElement);
         }
         
         // Get help text
         function getHelpText() {
-            return `📋 AVAILABLE COMMANDS:
-► help - Show this help
-► clear - Clear terminal
-► time - Show current time
-► date - Show current date
-► status - System information
-► menu - Quick actions menu
-► theme [color] - Change theme (blue/light/dark)
-► user [name] - Change username
-► ai [question] - Ask AI a question
-
-💡 Tip: Use the buttons below for quick actions!`;
+            return "COMMANDS:\nhelp - Show help\nclear - Clear terminal\ntime - Show time\ndate - Show date\nstatus - System info\nmenu - Quick menu\ntheme [color] - Change theme\nuser [name] - Change user\nai [question] - Ask AI";
         }
         
         // Change theme
@@ -296,28 +249,27 @@
             switch(theme.toLowerCase()) {
                 case 'blue':
                     document.body.style.backgroundColor = '#001f3f';
-                    return '🎨 Theme changed to Blue';
+                    return 'Theme changed to Blue';
                 case 'light':
                     document.body.style.backgroundColor = 'white';
                     document.body.style.color = 'black';
-                    return '🎨 Theme changed to Light';
+                    return 'Theme changed to Light';
                 case 'dark':
                     document.body.style.backgroundColor = 'black';
                     document.body.style.color = '#00ff00';
-                    return '🎨 Theme changed to Dark';
+                    return 'Theme changed to Dark';
                 default:
-                    return '❌ Available themes: blue, light, dark';
+                    return 'Available themes: blue, light, dark';
             }
         }
         
         // Process AI commands
         function processAICommand(question) {
             const responses = [
-                `🤖 AI: I understand you're asking about "${question}". This is a simulated response.`,
-                `🤖 AI: Interesting question! "${question}" is something I can help with in the future.`,
-                `🤖 AI: Processing your question about "${question}"... Response generated.`,
-                `🤖 AI: Regarding "${question}" - this would be processed by a real AI system.`,
-                `🤖 AI: Question received: "${question}". Analysis complete.`
+                'AI: Processing your question about "' + question + '"',
+                'AI: I understand you ask about "' + question + '"',
+                'AI: Question received: "' + question + '"',
+                'AI: Analyzing your question: "' + question + '"'
             ];
             return responses[Math.floor(Math.random() * responses.length)];
         }
@@ -325,12 +277,18 @@
         // Clear terminal
         function clearTerminal() {
             outputDiv.innerHTML = '';
-            displayResponse('🔄 Terminal cleared successfully. Ready for commands.', 'success');
+            const responseElement = document.createElement('div');
+            responseElement.className = 'response';
+            responseElement.textContent = 'Terminal cleared. Ready for commands.';
+            outputDiv.appendChild(responseElement);
         }
         
         // Show help
         function showHelp() {
-            displayResponse(getHelpText());
+            const responseElement = document.createElement('div');
+            responseElement.className = 'response';
+            responseElement.textContent = getHelpText();
+            outputDiv.appendChild(responseElement);
             scrollToBottom();
         }
         
@@ -339,405 +297,10 @@
             outputDiv.scrollTop = outputDiv.scrollHeight;
         }
         
-        // Get current time
-        function getTime() {
-            return new Date().toLocaleTimeString();
-        }
-        
-        // Get uptime
-        function getUptime() {
-            const now = new Date();
-            const diff = now - sessionStart;
-            const hours = Math.floor(diff / 3600000);<!doctype html>
-<html>
-<head>
-    <title>command terminal pro</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        body {
-            background-color: black;
-            color: #00ff00;
-            font-family: 'courier new', monospace;
-            padding: 20px;
-            min-height: 100vh;
-            touch-action: manipulation;
-        }
-        
-        #terminal {
-            max-width: 100%;
-            margin: 0 auto;
-        }
-        
-        #output {
-            margin-bottom: 20px;
-            line-height: 1.5;
-            min-height: 60vh;
-            overflow-y: auto;
-            padding: 15px;
-            border: 1px solid #333;
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.3);
-        }
-        
-        .input-line {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            background: #111;
-            border-radius: 8px;
-            position: fixed;
-            bottom: 70px;
-            left: 20px;
-            right: 20px;
-            box-shadow: 0 2px 10px rgba(0,255,0,0.1);
-        }
-        
-        #prompt {
-            color: #00ff00;
-            font-weight: bold;
-            font-size: 18px;
-        }
-        
-        #commandinput {
-            background: transparent;
-            border: none;
-            color: white;
-            font-family: 'courier new', monospace;
-            font-size: 16px;
-            flex: 1;
-            outline: none;
-            padding: 10px;
-        }
-        
-        .command {
-            color: #9370db;
-            margin-bottom: 10px;
-            font-weight: bold;
-            font-size: 16px;
-        }
-        
-        .response {
-            color: #00ff00;
-            margin-bottom: 10px;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-        
-        .error {
-            color: #ff4444;
-        }
-        
-        .success {
-            color: #44ff44;
-        }
-        
-        .ai-response {
-            color: #ffa500;
-            font-style: italic;
-        }
-        
-        .mobile-buttons {
-            display: flex;
-            gap: 8px;
-            margin-top: 15px;
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            justify-content: center;
-        }
-        
-        .mobile-btn {
-            background: #222;
-            color: #00ff00;
-            border: 1px solid #00ff00;
-            padding: 12px 15px;
-            border-radius: 6px;
-            font-family: 'courier new', monospace;
-            font-size: 14px;
-            cursor: pointer;
-            flex: 1;
-            max-width: 120px;
-        }
-        
-        .mobile-btn:active {
-            background: #00ff00;
-            color: black;
-        }
-        
-        .user-info {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            color: #00ff00;
-            font-size: 12px;
-        }
-        
-        /* scrollbar styling */
-        #output::-webkit-scrollbar {
-            width: 5px;
-        }
-        
-        #output::-webkit-scrollbar-thumb {
-            background: #00ff00;
-            border-radius: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="user-info" id="userinfo">user: guest</div>
-    
-    <div id="terminal">
-        <div id="output">
-            <div class="response">=== command terminal pro v3.0 ===</div>
-            <div class="response">● system: online</div>
-            <div class="response">● memory: stable</div>
-            <div class="response">● ai: ready</div>
-            <div class="response">● security: active</div>
-            <div class="response">================================</div>
-            <div class="response">type 'help' for command list</div>
-            <div class="response">type 'menu' for quick actions</div>
-        </div>
-        
-        <div class="input-line">
-            <span id="prompt">➜</span>
-            <input type="text" id="commandinput" placeholder="enter command..." autofocus>
-        </div>
-        
-        <div class="mobile-buttons">
-            <button class="mobile-btn" onclick="executecommand()">⏎ execute</button>
-            <button class="mobile-btn" onclick="scrolltobottom()">▼ scroll</button>
-            <button class="mobile-btn" onclick="clearterminal()">⌫ clear</button>
-            <button class="mobile-btn" onclick="showhelp()">❓ help</button>
-        </div>
-    </div>
-
-    <script>
-        // enhanced terminal functionality
-        const commandhistory = [];
-        let historyindex = -1;
-        let currentuser = 'guest';
-        let sessionstart = new date();
-        
-        const commandinput = document.getelementbyid('commandinput');
-        const outputdiv = document.getelementbyid('output');
-        const userinfo = document.getelementbyid('userinfo');
-        
-        // initialize terminal
-        function initterminal() {
-            commandinput.focus();
-            userinfo.textcontent = `user: ${currentuser} | ${gettime()}`;
-            
-            // load saved data if available
-            loadsessiondata();
-        }
-        
-        // execute command function
-        function executecommand() {
-            const command = commandinput.value.trim();
-            if (!command) return;
-            
-            // add to history
-            commandhistory.push(command);
-            historyindex = commandhistory.length;
-            savesessiondata();
-            
-            // display command
-            displaycommand(command);
-            
-            // clear input
-            commandinput.value = '';
-            
-            // process command
-            processcommand(command);
-            
-            // scroll to bottom
-            scrolltobottom();
-        }
-        
-        // display user command
-        function displaycommand(cmd) {
-            const commandelement = document.createelement('div');
-            commandelement.classname = 'command';
-            commandelement.innerhtml = `<span style="color:#00ff00">➜</span> ${cmd}`;
-            outputdiv.appendchild(commandelement);
-        }
-        
-        // process different commands
-        function processcommand(command) {
-            let responsetext = '';
-            let responseclass = 'response';
-            
-            const cmd = command.tolowercase();
-            
-            if (cmd === 'help') {
-                responsetext = gethelptext();
-            } 
-            else if (cmd === 'clear') {
-                clearterminal();
-                return;
-            }
-            else if (cmd === 'time') {
-                responsetext = `🕒 system time: ${new date().tolocaletimestring()}`;
-            }
-            else if (cmd === 'date') {
-                responsetext = `📅 system date: ${new date().tolocaledatestring()}`;
-            }
-            else if (cmd === 'status') {
-                responsetext = `📊 terminal status:\n● uptime: ${getuptime()}\n● commands: ${commandhistory.length}\n● user: ${currentuser}\n● memory: stable`;
-            }
-            else if (cmd === 'menu') {
-                responsetext = "📋 quick menu:\n● help - show commands\n● clear - clean screen\n● time - current time\n● date - today's date\n● status - system info\n● theme - change colors\n● ai [question] - ask ai";
-            }
-            else if (cmd.startswith('theme ')) {
-                responsetext = changetheme(command.substring(6));
-            }
-            else if (cmd.startswith('user ')) {
-                currentuser = command.substring(5);
-                userinfo.textcontent = `user: ${currentuser} | ${gettime()}`;
-                responsetext = `👤 user changed to: ${currentuser}`;
-            }
-            else if (cmd.startswith('ai ')) {
-                responsetext = processaicommand(command.substring(3));
-                responseclass = 'ai-response';
-            }
-            else {
-                responsetext = `❌ unknown command: "${command}"\n💡 type 'help' for available commands`;
-                responseclass = 'error';
-            }
-            
-            displayresponse(responsetext, responseclass);
-        }
-        
-        // display system response
-        function displayresponse(text, classname = 'response') {
-            const responseelement = document.createelement('div');
-            responseelement.classname = classname;
-            responseelement.textcontent = text;
-            outputdiv.appendchild(responseelement);
-        }
-        
-        // get help text
-        function gethelptext() {
-            return `📋 available commands:
-► help - show this help
-► clear - clear terminal
-► time - show current time
-► date - show current date
-► status - system information
-► menu - quick actions menu
-► theme [color] - change theme (blue/light/dark)
-► user [name] - change username
-► ai [question] - ask ai a question
-
-💡 tip: use the buttons below for quick actions!`;
-        }
-        
-        // change theme
-        function changetheme(theme) {
-            switch(theme.tolowercase()) {
-                case 'blue':
-                    document.body.style.backgroundcolor = '#001f3f';
-                    return '🎨 theme changed to blue';
-                case 'light':
-                    document.body.style.backgroundcolor = 'white';
-                    document.body.style.color = 'black';
-                    return '🎨 theme changed to light';
-                case 'dark':
-                    document.body.style.backgroundcolor = 'black';
-                    document.body.style.color = '#00ff00';
-                    return '🎨 theme changed to dark';
-                default:
-                    return '❌ available themes: blue, light, dark';
-            }
-        }
-        
-        // process ai commands
-        function processaicommand(question) {
-            const responses = [
-                `🤖 ai: i understand you're asking about "${question}". this is a simulated response.`,
-                `🤖 ai: interesting question! "${question}" is something i can help with in the future.`,
-                `🤖 ai: processing your question about "${question}"... response generated.`,
-                `🤖 ai: regarding "${question}" - this would be processed by a real ai system.`,
-                `🤖 ai: question received: "${question}". analysis complete.`
-            ];
-            return responses[math.floor(math.random() * responses.length)];
-        }
-        
-        // clear terminal
-        function clearterminal() {
-            outputdiv.innerhtml = '';
-            displayresponse('🔄 terminal cleared successfully. ready for commands.', 'success');
-        }
-        
-        // show help
-        function showhelp() {
-            displayresponse(gethelptext());
-            scrolltobottom();
-        }
-        
-        // scroll to bottom
-        function scrolltobottom() {
-            outputdiv.scrolltop = outputdiv.scrollheight;
-        }
-        
-        // get current time
-        function gettime() {
-            return new date().tolocaletimestring();
-        }
-        
-        // get uptime
-        function getuptime() {
-            const now = new date();
-            const diff = now - sessionstart;
-            const hours = math.floor(diff / 3600000);
-            const minutes = math.floor((diff % 3600000) / 60000);
-            return `${hours}h ${minutes}m`;
-        }
-        
-        // save session data
-        function savesessiondata() {
-            const data = {
-                user: currentuser,
-                history: commandhistory,
-                theme: document.body.style.backgroundcolor
-            };
-            localstorage.setitem('terminaldata', json.stringify(data));
-        }
-        
-        // load session data
-        function loadsessiondata() {
-            const saved = localstorage.getitem('terminaldata');
-            if (saved) {
-                const data = json.parse(saved);
-                currentuser = data.user || 'guest';
-                if (data.theme) document.body.style.backgroundcolor = data.theme;
-                userinfo.textcontent = `user: ${currentuser} | ${gettime()}`;
-            }
-        }
-        
-        // event listeners
-        commandinput.addeventlistener('keypress', function(e) {
-            if (e.key === 'enter') executecommand();
+        // Keep input focused
+        document.addEventListener('click', function() {
+            commandInput.focus();
         });
-        
-        document.addeventlistener('click', function() {
-            commandinput.focus();
-        });
-        
-        // initialize
-        initterminal();
-        
-        // auto-save every minute
-        setinterval(savesessiondata, 60000);
     </script>
 </body>
-</html>￼enter
+    </html>
